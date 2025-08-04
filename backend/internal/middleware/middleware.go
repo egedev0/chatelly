@@ -3,11 +3,12 @@ package middleware
 import (
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
+	"chatelly-backend/internal/config"
+	"chatelly-backend/pkg/utils"
+
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v4"
 )
 
 // CORS middleware
@@ -31,8 +32,7 @@ func CORS() gin.HandlerFunc {
 // Logger middleware
 func Logger() gin.HandlerFunc {
 	return gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
-		return fmt.Sprintf("%s - [%s] \"%s %s %s %d %s \"%s\" %s\"\
-",
+		return fmt.Sprintf("%s - [%s] \"%s %s %s %d %s \"%s\" %s\"\n",
 			param.ClientIP,
 			param.TimeStamp.Format(time.RFC1123),
 			param.Method,
@@ -52,42 +52,30 @@ func Recovery() gin.HandlerFunc {
 }
 
 // AuthRequired middleware
-func AuthRequired() gin.HandlerFunc {
+func AuthRequired(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
+		
+		// Extract token from header
+		tokenString, err := utils.ExtractTokenFromHeader(authHeader)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			c.Abort()
 			return
 		}
 
-		// Extract token from "Bearer <token>"
-		tokenParts := strings.Split(authHeader, " ")
-		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header format"})
+		// Validate access token
+		claims, err := utils.ValidateAccessToken(tokenString, cfg)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
 			c.Abort()
 			return
 		}
 
-		tokenString := tokenParts[1]
-
-		// Parse and validate token
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			// TODO: Get secret from config
-			return []byte("your-secret-key"), nil
-		})
-
-		if err != nil || !token.Valid {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-			c.Abort()
-			return
-		}
-
-		// Extract claims
-		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-			c.Set("user_id", claims["user_id"])
-			c.Set("email", claims["email"])
-		}
+		// Set user information in context
+		c.Set("user_id", claims.UserID)
+		c.Set("email", claims.Email)
+		c.Set("plan", claims.Plan)
 
 		c.Next()
 	}

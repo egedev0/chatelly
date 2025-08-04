@@ -54,24 +54,29 @@ func main() {
 		})
 	})
 
+	// Initialize handlers
+	authHandlers := handlers.NewAuthHandlers(cfg)
+
 	// API routes
 	api := router.Group("/api/v1")
 	{
 		// Auth routes
 		auth := api.Group("/auth")
 		{
-			auth.POST("/register", handlers.Register)
-			auth.POST("/login", handlers.Login)
-			auth.POST("/refresh", handlers.RefreshToken)
+			auth.POST("/register", authHandlers.Register)
+			auth.POST("/login", authHandlers.Login)
+			auth.POST("/refresh", authHandlers.RefreshToken)
+			auth.POST("/logout", authHandlers.Logout)
 		}
 
 		// Protected routes
 		protected := api.Group("/")
-		protected.Use(middleware.AuthRequired())
+		protected.Use(middleware.AuthRequired(cfg))
 		{
 			// User routes
-			protected.GET("/user/profile", handlers.GetProfile)
-			protected.PUT("/user/profile", handlers.UpdateProfile)
+			protected.GET("/user/profile", authHandlers.GetProfile)
+			protected.PUT("/user/profile", authHandlers.UpdateProfile)
+			protected.POST("/user/change-password", authHandlers.ChangePassword)
 
 			// Website routes
 			protected.GET("/websites", handlers.GetWebsites)
