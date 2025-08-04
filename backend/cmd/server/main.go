@@ -58,6 +58,7 @@ func main() {
 	authHandlers := handlers.NewAuthHandlers(cfg)
 	websiteHandlers := handlers.NewWebsiteHandlers(cfg)
 	chatHandlers := handlers.NewChatHandlers(cfg)
+	widgetHandlers := handlers.NewWidgetHandlers(cfg)
 
 	// API routes
 	api := router.Group("/api/v1")
@@ -108,6 +109,12 @@ func main() {
 			protected.GET("/subscription", handlers.GetSubscription)
 			protected.POST("/subscription", handlers.CreateSubscription)
 			protected.PUT("/subscription", handlers.UpdateSubscription)
+
+			// Widget management routes (protected)
+			protected.GET("/widget/themes", widgetHandlers.GetAvailableThemes)
+			protected.GET("/widget/positions", widgetHandlers.GetAvailablePositions)
+			protected.POST("/widget/validate-settings", widgetHandlers.ValidateWidgetSettings)
+			protected.POST("/widget/preview", widgetHandlers.PreviewWidget)
 		}
 	}
 
@@ -116,14 +123,14 @@ func main() {
 	{
 		// WebSocket endpoint for chat
 		widget.GET("/ws/:widget_key", func(c *gin.Context) {
-			handlers.HandleWebSocket(hub, c)
+			widgetHandlers.HandleWebSocket(hub, c)
 		})
 
 		// Widget configuration
-		widget.GET("/config/:widget_key", handlers.GetWidgetConfig)
+		widget.GET("/config/:widget_key", widgetHandlers.GetWidgetConfig)
 
 		// Widget script
-		widget.GET("/script/:widget_key", handlers.GetWidgetScript)
+		widget.GET("/script/:widget_key", widgetHandlers.GetWidgetScript)
 	}
 
 	// Start server
