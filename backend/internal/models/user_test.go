@@ -338,12 +338,12 @@ func TestUser_CanCreateWebsite(t *testing.T) {
 	// Create 3 websites for the user (starter plan limit)
 	for i := 0; i < 3; i++ {
 		website := &Website{
-			UserID:    user.ID,
-			Name:      fmt.Sprintf("Test Website %d", i+1),
-			Domain:    fmt.Sprintf("example%d.com", i+1),
-			WidgetKey: fmt.Sprintf("test-key-%d", i+1),
-			Settings:  WebsiteSettings{},
+			UserID:   user.ID,
+			Name:     fmt.Sprintf("Test Website %d", i+1),
+			Domain:   fmt.Sprintf("example%d.com", i+1),
+			Settings: GetDefaultWebsiteSettings(),
 		}
+		// Let BeforeCreate generate the widget key
 		result := db.Create(website)
 		if result.Error != nil {
 			t.Fatalf("Failed to create website: %v", result.Error)
