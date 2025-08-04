@@ -1,0 +1,76 @@
+{
+  "activeSites": [
+    {
+      "id": 1,
+      "siteName": "ecommerce.com",
+      "domain": "https://ecommerce.com",
+      "status": "active",
+      "lastActivity": "2024-01-15T14:30:00Z",
+      "totalMessages": 1247,
+      "activeUsers": 23,
+      "avgResponseTime": "2.3s",
+      "satisfactionRate": 4.2,
+      "category": "E-commerce"
+    },
+    {
+      "id": 2,
+      "siteName": "healthcare.com",
+      "domain": "https://healthcare.com",
+      "status": "active",
+      "lastActivity": "2024-01-15T14:25:00Z",
+      "totalMessages": 892,
+      "activeUsers": 18,
+      "avgResponseTime": "1.8s",
+      "satisfactionRate": 4.5,
+      "category": "Healthcare"
+    },
+    {
+      "id": 3,
+      "siteName": "banking.com",
+      "domain": "https://banking.com",
+      "status": "active",
+      "lastActivity": "2024-01-15T14:28:00Z",
+      "totalMessages": 634,
+      "activeUsers": 15,
+      "avgResponseTime": "3.1s",
+      "satisfactionRate": 4.0,
+      "category": "Finance"
+    },
+    {
+      "id": 4,
+      "siteName": "education.com",
+      "domain": "https://education.com",
+      "status": "active",
+      "lastActivity": "2024-01-15T14:20:00Z",
+      "totalMessages": 456,
+      "activeUsers": 12,
+      "avgResponseTime": "2.7s",
+      "satisfactionRate": 4.3,
+      "category": "Education"
+    },
+    {
+      "id": 5,
+      "siteName": "realestate.com",
+      "domain": "https://realestate.com",
+      "status": "active",
+      "lastActivity": "2024-01-15T14:15:00Z",
+      "totalMessages": 298,
+      "activeUsers": 8,
+      "avgResponseTime": "2.9s",
+      "satisfactionRate": 3.9,
+      "category": "Real Estate"
+    },
+    {
+      "id": 6,
+      "siteName": "techsupport.com",
+      "domain": "https://techsupport.com",
+      "status": "inactive",
+      "lastActivity": "2024-01-15T12:45:00Z",
+      "totalMessages": 156,
+      "activeUsers": 0,
+      "avgResponseTime": "4.2s",
+      "satisfactionRate": 3.7,
+      "category": "Technology"
+    }
+  ]
+}

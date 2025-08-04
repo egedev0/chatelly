@@ -1,0 +1,198 @@
+{
+  "hourlyMetrics": {
+    "today": [
+      {
+        "hour": "00:00",
+        "timestamp": "2024-01-15T00:00:00Z",
+        "totalMessages": 45,
+        "activeUsers": 12,
+        "newConversations": 8,
+        "avgResponseTime": 2.1
+      },
+      {
+        "hour": "01:00",
+        "timestamp": "2024-01-15T01:00:00Z",
+        "totalMessages": 32,
+        "activeUsers": 9,
+        "newConversations": 5,
+        "avgResponseTime": 2.3
+      },
+      {
+        "hour": "02:00",
+        "timestamp": "2024-01-15T02:00:00Z",
+        "totalMessages": 28,
+        "activeUsers": 7,
+        "newConversations": 4,
+        "avgResponseTime": 2.0
+      },
+      {
+        "hour": "03:00",
+        "timestamp": "2024-01-15T03:00:00Z",
+        "totalMessages": 18,
+        "activeUsers": 5,
+        "newConversations": 2,
+        "avgResponseTime": 1.9
+      },
+      {
+        "hour": "04:00",
+        "timestamp": "2024-01-15T04:00:00Z",
+        "totalMessages": 15,
+        "activeUsers": 4,
+        "newConversations": 1,
+        "avgResponseTime": 2.2
+      },
+      {
+        "hour": "05:00",
+        "timestamp": "2024-01-15T05:00:00Z",
+        "totalMessages": 22,
+        "activeUsers": 6,
+        "newConversations": 3,
+        "avgResponseTime": 2.4
+      },
+      {
+        "hour": "06:00",
+        "timestamp": "2024-01-15T06:00:00Z",
+        "totalMessages": 38,
+        "activeUsers": 11,
+        "newConversations": 7,
+        "avgResponseTime": 2.1
+      },
+      {
+        "hour": "07:00",
+        "timestamp": "2024-01-15T07:00:00Z",
+        "totalMessages": 56,
+        "activeUsers": 16,
+        "newConversations": 12,
+        "avgResponseTime": 2.0
+      },
+      {
+        "hour": "08:00",
+        "timestamp": "2024-01-15T08:00:00Z",
+        "totalMessages": 78,
+        "activeUsers": 22,
+        "newConversations": 18,
+        "avgResponseTime": 2.3
+      },
+      {
+        "hour": "09:00",
+        "timestamp": "2024-01-15T09:00:00Z",
+        "totalMessages": 95,
+        "activeUsers": 28,
+        "newConversations": 22,
+        "avgResponseTime": 2.2
+      },
+      {
+        "hour": "10:00",
+        "timestamp": "2024-01-15T10:00:00Z",
+        "totalMessages": 112,
+        "activeUsers": 34,
+        "newConversations": 26,
+        "avgResponseTime": 2.1
+      },
+      {
+        "hour": "11:00",
+        "timestamp": "2024-01-15T11:00:00Z",
+        "totalMessages": 128,
+        "activeUsers": 38,
+        "newConversations": 29,
+        "avgResponseTime": 2.4
+      },
+      {
+        "hour": "12:00",
+        "timestamp": "2024-01-15T12:00:00Z",
+        "totalMessages": 145,
+        "activeUsers": 42,
+        "newConversations": 35,
+        "avgResponseTime": 2.5
+      },
+      {
+        "hour": "13:00",
+        "timestamp": "2024-01-15T13:00:00Z",
+        "totalMessages": 134,
+        "activeUsers": 39,
+        "newConversations": 31,
+        "avgResponseTime": 2.3
+      },
+      {
+        "hour": "14:00",
+        "timestamp": "2024-01-15T14:00:00Z",
+        "totalMessages": 156,
+        "activeUsers": 45,
+        "newConversations": 38,
+        "avgResponseTime": 2.2
+      },
+      {
+        "hour": "15:00",
+        "timestamp": "2024-01-15T15:00:00Z",
+        "totalMessages": 142,
+        "activeUsers": 41,
+        "newConversations": 33,
+        "avgResponseTime": 2.1
+      },
+      {
+        "hour": "16:00",
+        "timestamp": "2024-01-15T16:00:00Z",
+        "totalMessages": 138,
+        "activeUsers": 40,
+        "newConversations": 32,
+        "avgResponseTime": 2.4
+      },
+      {
+        "hour": "17:00",
+        "timestamp": "2024-01-15T17:00:00Z",
+        "totalMessages": 125,
+        "activeUsers": 36,
+        "newConversations": 28,
+        "avgResponseTime": 2.3
+      },
+      {
+        "hour": "18:00",
+        "timestamp": "2024-01-15T18:00:00Z",
+        "totalMessages": 118,
+        "activeUsers": 33,
+        "newConversations": 25,
+        "avgResponseTime": 2.2
+      },
+      {
+        "hour": "19:00",
+        "timestamp": "2024-01-15T19:00:00Z",
+        "totalMessages": 102,
+        "activeUsers": 29,
+        "newConversations": 21,
+        "avgResponseTime": 2.1
+      },
+      {
+        "hour": "20:00",
+        "timestamp": "2024-01-15T20:00:00Z",
+        "totalMessages": 89,
+        "activeUsers": 25,
+        "newConversations": 18,
+        "avgResponseTime": 2.0
+      },
+      {
+        "hour": "21:00",
+        "timestamp": "2024-01-15T21:00:00Z",
+        "totalMessages": 76,
+        "activeUsers": 21,
+        "newConversations": 15,
+        "avgResponseTime": 2.2
+      },
+      {
+        "hour": "22:00",
+        "timestamp": "2024-01-15T22:00:00Z",
+        "totalMessages": 63,
+        "activeUsers": 18,
+        "newConversations": 12,
+        "avgResponseTime": 2.1
+      },
+      {
+        "hour": "23:00",
+        "timestamp": "2024-01-15T23:00:00Z",
+        "totalMessages": 52,
+        "activeUsers": 14,
+        "newConversations": 9,
+        "avgResponseTime": 2.3
+      }
+    ]
+  }
+}

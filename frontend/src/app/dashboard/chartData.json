@@ -1,0 +1,50 @@
+{
+  "hourlyMetrics": {
+    "labels": ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00"],
+    "datasets": [
+      {
+        "label": "Messages",
+        "data": [45, 78, 92, 156, 134, 189, 167],
+        "borderColor": "rgb(59, 130, 246)",
+        "backgroundColor": "rgba(59, 130, 246, 0.1)",
+        "tension": 0.4
+      },
+      {
+        "label": "Active Users",
+        "data": [12, 18, 24, 35, 28, 42, 38],
+        "borderColor": "rgb(16, 185, 129)",
+        "backgroundColor": "rgba(16, 185, 129, 0.1)",
+        "tension": 0.4
+      }
+    ]
+  },
+  "siteMetrics": {
+    "labels": ["ecommerce.com", "healthcare.com", "banking.com", "education.com", "realestate.com"],
+    "datasets": [
+      {
+        "label": "Messages per Site",
+        "data": [45, 32, 28, 38, 25],
+        "backgroundColor": [
+          "rgba(59, 130, 246, 0.8)",
+          "rgba(16, 185, 129, 0.8)",
+          "rgba(245, 158, 11, 0.8)",
+          "rgba(239, 68, 68, 0.8)",
+          "rgba(139, 92, 246, 0.8)"
+        ]
+      }
+    ]
+  },
+  "satisfactionMetrics": {
+    "labels": ["High", "Medium", "Low"],
+    "datasets": [
+      {
+        "data": [75, 20, 5],
+        "backgroundColor": [
+          "rgba(16, 185, 129, 0.8)",
+          "rgba(245, 158, 11, 0.8)",
+          "rgba(239, 68, 68, 0.8)"
+        ]
+      }
+    ]
+  }
+}

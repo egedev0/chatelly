@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+
 import {
   MessageSquare,
   Zap,
@@ -165,7 +166,8 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <GradientBackground />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative z-10">
           <div className="text-center">
             <Badge className="mb-4" variant="secondary">
               🚀 New: AI-Powered Chat Responses
@@ -343,12 +345,12 @@ export default function HomePage() {
             Join thousands of businesses using Chatelly to engage customers and boost conversions.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="secondary" asChild>
+            <LiquidButton size="lg" variant="secondary" asChild>
               <Link href="/dashboard">
                 Start Free Trial
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
-            </Button>
+            </LiquidButton>
             <Button size="lg" variant="outline" className="text-white border-white hover:bg-white hover:text-blue-600">
               Contact Sales
             </Button>

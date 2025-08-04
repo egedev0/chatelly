@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "domain": "example.com",
+    "isActive": "active",
+    "userCount": "12/100",
+    "widgetId": "widget_abc123"
+  },
+  {
+    "id": 2,
+    "domain": "mystore.com",
+    "isActive": "passive",
+    "userCount": "3/50",
+    "widgetId": "widget_def456"
+  },
+  {
+    "id": 3,
+    "domain": "blog.site.org",
+    "isActive": "progress",
+    "userCount": "0/25",
+    "widgetId": "widget_ghi789"
+  },
+  {
+    "id": 4,
+    "domain": "company.net",
+    "isActive": "inactive",
+    "userCount": "0/200",
+    "widgetId": "widget_jkl012"
+  },
+  {
+    "id": 5,
+    "domain": "techblog.dev",
+    "isActive": "active",
+    "userCount": "8/75",
+    "widgetId": "widget_mno345"
+  }
+]
