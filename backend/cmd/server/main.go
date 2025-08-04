@@ -8,6 +8,7 @@ import (
 	"chatelly-backend/internal/database"
 	"chatelly-backend/internal/handlers"
 	"chatelly-backend/internal/middleware"
+	"chatelly-backend/pkg/redis"
 	"chatelly-backend/pkg/websocket"
 
 	"github.com/gin-gonic/gin"
@@ -30,6 +31,12 @@ func main() {
 		log.Fatal("Failed to migrate database:", err)
 	}
 
+	// Connect to Redis
+	if err := redis.Connect(cfg); err != nil {
+		log.Printf("Warning: Failed to connect to Redis: %v", err)
+		log.Println("Rate limiting will be disabled")
+	}
+
 	// Create WebSocket hub
 	hub := websocket.NewHub()
 	go hub.Run()
@@ -42,9 +49,12 @@ func main() {
 	router := gin.Default()
 
 	// Add middleware
-	router.Use(middleware.CORS())
+	router.Use(middleware.RequestID())
+	router.Use(middleware.SecurityHeaders())
+	router.Use(middleware.CORS(cfg))
 	router.Use(middleware.Logger())
 	router.Use(middleware.Recovery())
+	router.Use(middleware.RequestSizeLimit(10 * 1024 * 1024)) // 10MB limit
 
 	// Health check endpoint
 	router.GET("/health", func(c *gin.Context) {
@@ -61,11 +71,14 @@ func main() {
 	widgetHandlers := handlers.NewWidgetHandlers(cfg)
 	analyticsHandlers := handlers.NewAnalyticsHandlers(cfg)
 
-	// API routes
+	// API routes with rate limiting
 	api := router.Group("/api/v1")
+	api.Use(middleware.APIRateLimit(cfg))
+	api.Use(middleware.ValidateContentType("application/json", "multipart/form-data"))
 	{
-		// Auth routes
+		// Auth routes with brute force protection
 		auth := api.Group("/auth")
+		auth.Use(middleware.BruteForceProtection(cfg))
 		{
 			auth.POST("/register", authHandlers.Register)
 			auth.POST("/login", authHandlers.Login)
@@ -128,8 +141,9 @@ func main() {
 		}
 	}
 
-	// Widget routes (public)
+	// Widget routes (public) with widget-specific rate limiting
 	widget := router.Group("/widget")
+	widget.Use(middleware.WidgetRateLimit(cfg))
 	{
 		// WebSocket endpoint for chat
 		widget.GET("/ws/:widget_key", func(c *gin.Context) {
