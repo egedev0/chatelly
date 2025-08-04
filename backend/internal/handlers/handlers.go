@@ -41,48 +41,7 @@ func UpdateProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Update profile endpoint - TODO"})
 }
 
-// Website handlers
-func GetWebsites(c *gin.Context) {
-	userID := c.GetFloat64("user_id")
-	var websites []models.Website
-
-	if err := database.DB.Where("user_id = ?", uint(userID)).Find(&websites).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch websites"})
-		return
-	}
-
-	c.JSON(http.StatusOK, websites)
-}
-
-func CreateWebsite(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "Create website endpoint - TODO"})
-}
-
-func GetWebsite(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid website ID"})
-		return
-	}
-
-	userID := c.GetFloat64("user_id")
-	var website models.Website
-
-	if err := database.DB.Where("id = ? AND user_id = ?", uint(id), uint(userID)).First(&website).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Website not found"})
-		return
-	}
-
-	c.JSON(http.StatusOK, website)
-}
-
-func UpdateWebsite(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "Update website endpoint - TODO"})
-}
-
-func DeleteWebsite(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "Delete website endpoint - TODO"})
-}
+// Legacy handlers - these are now handled by dedicated handler files
 
 // Chat handlers
 func GetChats(c *gin.Context) {

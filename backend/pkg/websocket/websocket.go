@@ -5,24 +5,41 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
 
 var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
 	CheckOrigin: func(r *http.Request) bool {
 		// TODO: Implement proper origin checking based on website settings
 		return true
 	},
 }
 
+const (
+	// Time allowed to write a message to the peer
+	writeWait = 10 * time.Second
+
+	// Time allowed to read the next pong message from the peer
+	pongWait = 60 * time.Second
+
+	// Send pings to peer with this period. Must be less than pongWait
+	pingPeriod = (pongWait * 9) / 10
+
+	// Maximum message size allowed from peer
+	maxMessageSize = 512
+)
+
 // Hub maintains the set of active clients and broadcasts messages to the clients
 type Hub struct {
-	// Registered clients
-	clients map[*Client]bool
+	// Registered clients grouped by website ID
+	clients map[uint]map[*Client]bool
 
 	// Inbound messages from the clients
-	broadcast chan []byte
+	broadcast chan *Message
 
 	// Register requests from the clients
 	register chan *Client
@@ -32,6 +49,9 @@ type Hub struct {
 
 	// Mutex for thread safety
 	mu sync.RWMutex
+
+	// Message handlers
+	messageHandlers map[string]func(*Client, *Message)
 }
 
 // Client is a middleman between the websocket connection and the hub
@@ -49,6 +69,12 @@ type Client struct {
 	WebsiteID uint
 	UserAgent string
 	IP        string
+	Language  string
+	ConnectedAt time.Time
+
+	// Client state
+	isActive bool
+	mu       sync.RWMutex
 }
 
 // Message represents a websocket message
@@ -56,7 +82,9 @@ type Message struct {
 	Type      string      `json:"type"`
 	Data      interface{} `json:"data"`
 	SessionID string      `json:"session_id,omitempty"`
+	WebsiteID uint        `json:"website_id,omitempty"`
 	Timestamp int64       `json:"timestamp"`
+	Client    *Client     `json:"-"` // Reference to sender client
 }
 
 // ChatMessage represents a chat message
@@ -69,12 +97,28 @@ type ChatMessage struct {
 
 // NewHub creates a new Hub
 func NewHub() *Hub {
-	return &Hub{
-		broadcast:  make(chan []byte),
-		register:   make(chan *Client),
-		unregister: make(chan *Client),
-		clients:    make(map[*Client]bool),
+	hub := &Hub{
+		broadcast:       make(chan *Message),
+		register:        make(chan *Client),
+		unregister:      make(chan *Client),
+		clients:         make(map[uint]map[*Client]bool),
+		messageHandlers: make(map[string]func(*Client, *Message)),
 	}
+
+	// Register default message handlers
+	hub.registerMessageHandlers()
+	
+	return hub
+}
+
+// registerMessageHandlers registers default message handlers
+func (h *Hub) registerMessageHandlers() {
+	h.messageHandlers["chat_message"] = h.handleChatMessage
+	h.messageHandlers["typing_start"] = h.handleTypingStart
+	h.messageHandlers["typing_stop"] = h.handleTypingStop
+	h.messageHandlers["join_chat"] = h.handleJoinChat
+	h.messageHandlers["leave_chat"] = h.handleLeaveChat
+	h.messageHandlers["ping"] = h.handlePing
 }
 
 // Run starts the hub
@@ -82,33 +126,117 @@ func (h *Hub) Run() {
 	for {
 		select {
 		case client := <-h.register:
-			h.mu.Lock()
-			h.clients[client] = true
-			h.mu.Unlock()
-			log.Printf("Client registered: %s", client.SessionID)
+			h.registerClient(client)
 
 		case client := <-h.unregister:
-			h.mu.Lock()
-			if _, ok := h.clients[client]; ok {
-				delete(h.clients, client)
-				close(client.send)
-			}
-			h.mu.Unlock()
-			log.Printf("Client unregistered: %s", client.SessionID)
+			h.unregisterClient(client)
 
 		case message := <-h.broadcast:
-			h.mu.RLock()
-			for client := range h.clients {
-				select {
-				case client.send <- message:
-				default:
-					close(client.send)
-					delete(h.clients, client)
-				}
-			}
-			h.mu.RUnlock()
+			h.handleBroadcast(message)
 		}
 	}
+}
+
+// registerClient registers a new client
+func (h *Hub) registerClient(client *Client) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	if h.clients[client.WebsiteID] == nil {
+		h.clients[client.WebsiteID] = make(map[*Client]bool)
+	}
+	h.clients[client.WebsiteID][client] = true
+
+	log.Printf("Client registered: %s for website %d", client.SessionID, client.WebsiteID)
+
+	// Send welcome message
+	client.SendMessage("connection_established", map[string]interface{}{
+		"session_id": client.SessionID,
+		"timestamp":  time.Now().Unix(),
+	})
+}
+
+// unregisterClient unregisters a client
+func (h *Hub) unregisterClient(client *Client) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	if websiteClients, ok := h.clients[client.WebsiteID]; ok {
+		if _, ok := websiteClients[client]; ok {
+			delete(websiteClients, client)
+			close(client.send)
+
+			// Clean up empty website groups
+			if len(websiteClients) == 0 {
+				delete(h.clients, client.WebsiteID)
+			}
+		}
+	}
+
+	log.Printf("Client unregistered: %s from website %d", client.SessionID, client.WebsiteID)
+}
+
+// handleBroadcast handles message broadcasting
+func (h *Hub) handleBroadcast(message *Message) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	// Handle message based on type
+	if handler, exists := h.messageHandlers[message.Type]; exists {
+		handler(message.Client, message)
+	} else {
+		log.Printf("Unknown message type: %s", message.Type)
+	}
+}
+
+// Message handlers
+func (h *Hub) handleChatMessage(client *Client, message *Message) {
+	// TODO: Save message to database and process with AI
+	log.Printf("Chat message from %s: %+v", client.SessionID, message.Data)
+	
+	// Broadcast to all clients in the same website
+	h.broadcastToWebsite(client.WebsiteID, message)
+}
+
+func (h *Hub) handleTypingStart(client *Client, message *Message) {
+	// Broadcast typing indicator to other clients
+	typingMessage := &Message{
+		Type:      "user_typing",
+		Data:      map[string]interface{}{"session_id": client.SessionID},
+		Timestamp: time.Now().Unix(),
+	}
+	h.broadcastToWebsiteExcept(client.WebsiteID, client, typingMessage)
+}
+
+func (h *Hub) handleTypingStop(client *Client, message *Message) {
+	// Broadcast typing stop to other clients
+	typingMessage := &Message{
+		Type:      "user_stopped_typing",
+		Data:      map[string]interface{}{"session_id": client.SessionID},
+		Timestamp: time.Now().Unix(),
+	}
+	h.broadcastToWebsiteExcept(client.WebsiteID, client, typingMessage)
+}
+
+func (h *Hub) handleJoinChat(client *Client, message *Message) {
+	// TODO: Load chat history and send to client
+	log.Printf("Client %s joined chat for website %d", client.SessionID, client.WebsiteID)
+	
+	// Send chat history (placeholder)
+	client.SendMessage("chat_history", map[string]interface{}{
+		"messages": []interface{}{}, // TODO: Load from database
+	})
+}
+
+func (h *Hub) handleLeaveChat(client *Client, message *Message) {
+	log.Printf("Client %s left chat for website %d", client.SessionID, client.WebsiteID)
+}
+
+func (h *Hub) handlePing(client *Client, message *Message) {
+	// Respond with pong
+	client.SendMessage("pong", map[string]interface{}{
+		"timestamp": time.Now().Unix(),
+	})
 }
 
 // BroadcastToSession sends a message to a specific session
@@ -116,13 +244,48 @@ func (h *Hub) BroadcastToSession(sessionID string, message []byte) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	for client := range h.clients {
-		if client.SessionID == sessionID {
+	for _, websiteClients := range h.clients {
+		for client := range websiteClients {
+			if client.SessionID == sessionID {
+				select {
+				case client.send <- message:
+				default:
+					close(client.send)
+					delete(websiteClients, client)
+				}
+				return
+			}
+		}
+	}
+}
+
+// broadcastToWebsite sends a message to all clients of a website
+func (h *Hub) broadcastToWebsite(websiteID uint, message *Message) {
+	if websiteClients, ok := h.clients[websiteID]; ok {
+		messageBytes, _ := json.Marshal(message)
+		for client := range websiteClients {
 			select {
-			case client.send <- message:
+			case client.send <- messageBytes:
 			default:
 				close(client.send)
-				delete(h.clients, client)
+				delete(websiteClients, client)
+			}
+		}
+	}
+}
+
+// broadcastToWebsiteExcept sends a message to all clients of a website except one
+func (h *Hub) broadcastToWebsiteExcept(websiteID uint, exceptClient *Client, message *Message) {
+	if websiteClients, ok := h.clients[websiteID]; ok {
+		messageBytes, _ := json.Marshal(message)
+		for client := range websiteClients {
+			if client != exceptClient {
+				select {
+				case client.send <- messageBytes:
+				default:
+					close(client.send)
+					delete(websiteClients, client)
+				}
 			}
 		}
 	}
@@ -132,7 +295,23 @@ func (h *Hub) BroadcastToSession(sessionID string, message []byte) {
 func (h *Hub) GetClientCount() int {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
-	return len(h.clients)
+	
+	total := 0
+	for _, websiteClients := range h.clients {
+		total += len(websiteClients)
+	}
+	return total
+}
+
+// GetWebsiteClientCount returns the number of connected clients for a website
+func (h *Hub) GetWebsiteClientCount(websiteID uint) int {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	
+	if websiteClients, ok := h.clients[websiteID]; ok {
+		return len(websiteClients)
+	}
+	return 0
 }
 
 // ServeWS handles websocket requests from the peer
@@ -144,13 +323,16 @@ func ServeWS(hub *Hub, w http.ResponseWriter, r *http.Request, sessionID string,
 	}
 
 	client := &Client{
-		hub:       hub,
-		conn:      conn,
-		send:      make(chan []byte, 256),
-		SessionID: sessionID,
-		WebsiteID: websiteID,
-		UserAgent: r.UserAgent(),
-		IP:        getClientIP(r),
+		hub:         hub,
+		conn:        conn,
+		send:        make(chan []byte, 256),
+		SessionID:   sessionID,
+		WebsiteID:   websiteID,
+		UserAgent:   r.UserAgent(),
+		IP:          getClientIP(r),
+		Language:    r.Header.Get("Accept-Language"),
+		ConnectedAt: time.Now(),
+		isActive:    true,
 	}
 
 	client.hub.register <- client
@@ -167,8 +349,15 @@ func (c *Client) readPump() {
 		c.conn.Close()
 	}()
 
+	c.conn.SetReadLimit(maxMessageSize)
+	c.conn.SetReadDeadline(time.Now().Add(pongWait))
+	c.conn.SetPongHandler(func(string) error {
+		c.conn.SetReadDeadline(time.Now().Add(pongWait))
+		return nil
+	})
+
 	for {
-		_, message, err := c.conn.ReadMessage()
+		_, messageBytes, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("WebSocket error: %v", err)
@@ -178,26 +367,34 @@ func (c *Client) readPump() {
 
 		// Handle incoming message
 		var msg Message
-		if err := json.Unmarshal(message, &msg); err != nil {
+		if err := json.Unmarshal(messageBytes, &msg); err != nil {
 			log.Printf("Error unmarshaling message: %v", err)
 			continue
 		}
 
-		// Add session ID to message
+		// Add metadata to message
 		msg.SessionID = c.SessionID
+		msg.WebsiteID = c.WebsiteID
+		msg.Timestamp = time.Now().Unix()
+		msg.Client = c
 
-		// Process message based on type
-		c.handleMessage(&msg)
+		// Send to hub for processing
+		c.hub.broadcast <- &msg
 	}
 }
 
 // writePump pumps messages from the hub to the websocket connection
 func (c *Client) writePump() {
-	defer c.conn.Close()
+	ticker := time.NewTicker(pingPeriod)
+	defer func() {
+		ticker.Stop()
+		c.conn.Close()
+	}()
 
 	for {
 		select {
 		case message, ok := <-c.send:
+			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
@@ -207,21 +404,28 @@ func (c *Client) writePump() {
 				log.Printf("WebSocket write error: %v", err)
 				return
 			}
+
+		case <-ticker.C:
+			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				return
+			}
 		}
 	}
 }
 
-// handleMessage processes incoming messages
-func (c *Client) handleMessage(msg *Message) {
-	// TODO: Implement message handling logic
-	// This will include:
-	// - Saving messages to database
-	// - Processing with AI
-	// - Translation if needed
-	// - Moderation checks
-	// - Broadcasting responses
+// IsActive returns whether the client is active
+func (c *Client) IsActive() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.isActive
+}
 
-	log.Printf("Received message from %s: %+v", c.SessionID, msg)
+// SetActive sets the client's active status
+func (c *Client) SetActive(active bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.isActive = active
 }
 
 // SendMessage sends a message to the client
@@ -260,5 +464,5 @@ func getClientIP(r *http.Request) string {
 }
 
 func getCurrentTimestamp() int64 {
-	return 0 // TODO: Implement proper timestamp
+	return time.Now().Unix()
 }

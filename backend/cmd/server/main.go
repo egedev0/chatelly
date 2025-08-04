@@ -56,6 +56,7 @@ func main() {
 
 	// Initialize handlers
 	authHandlers := handlers.NewAuthHandlers(cfg)
+	websiteHandlers := handlers.NewWebsiteHandlers(cfg)
 
 	// API routes
 	api := router.Group("/api/v1")
@@ -79,11 +80,17 @@ func main() {
 			protected.POST("/user/change-password", authHandlers.ChangePassword)
 
 			// Website routes
-			protected.GET("/websites", handlers.GetWebsites)
-			protected.POST("/websites", handlers.CreateWebsite)
-			protected.GET("/websites/:id", handlers.GetWebsite)
-			protected.PUT("/websites/:id", handlers.UpdateWebsite)
-			protected.DELETE("/websites/:id", handlers.DeleteWebsite)
+			protected.GET("/websites", websiteHandlers.GetWebsites)
+			protected.POST("/websites", websiteHandlers.CreateWebsite)
+			protected.GET("/websites/search", websiteHandlers.SearchWebsites)
+			protected.GET("/websites/:id", websiteHandlers.GetWebsite)
+			protected.PUT("/websites/:id", websiteHandlers.UpdateWebsite)
+			protected.DELETE("/websites/:id", websiteHandlers.DeleteWebsite)
+			protected.PUT("/websites/:id/settings", websiteHandlers.UpdateWebsiteSettings)
+			protected.POST("/websites/:id/toggle-status", websiteHandlers.ToggleWebsiteStatus)
+			protected.GET("/websites/:id/stats", websiteHandlers.GetWebsiteStats)
+			protected.GET("/websites/:id/analytics", websiteHandlers.GetWebsiteAnalytics)
+			protected.POST("/websites/:id/regenerate-key", websiteHandlers.RegenerateWidgetKey)
 
 			// Chat routes
 			protected.GET("/websites/:id/chats", handlers.GetChats)
