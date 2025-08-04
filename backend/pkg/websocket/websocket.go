@@ -191,11 +191,37 @@ func (h *Hub) handleBroadcast(message *Message) {
 
 // Message handlers
 func (h *Hub) handleChatMessage(client *Client, message *Message) {
-	// TODO: Save message to database and process with AI
-	log.Printf("Chat message from %s: %+v", client.SessionID, message.Data)
+	// Extract message data
+	data, ok := message.Data.(map[string]interface{})
+	if !ok {
+		log.Printf("Invalid message data format from %s", client.SessionID)
+		return
+	}
+	
+	content, ok := data["content"].(string)
+	if !ok || content == "" {
+		log.Printf("Invalid message content from %s", client.SessionID)
+		return
+	}
+	
+	// TODO: Save message to database using ChatService
+	// For now, just log and broadcast
+	log.Printf("Chat message from %s: %s", client.SessionID, content)
+	
+	// Create response message
+	responseMessage := &Message{
+		Type: "message_received",
+		Data: map[string]interface{}{
+			"session_id": client.SessionID,
+			"content":    content,
+			"timestamp":  time.Now().Unix(),
+			"sender":     "user",
+		},
+		Timestamp: time.Now().Unix(),
+	}
 	
 	// Broadcast to all clients in the same website
-	h.broadcastToWebsite(client.WebsiteID, message)
+	h.broadcastToWebsite(client.WebsiteID, responseMessage)
 }
 
 func (h *Hub) handleTypingStart(client *Client, message *Message) {
@@ -219,12 +245,20 @@ func (h *Hub) handleTypingStop(client *Client, message *Message) {
 }
 
 func (h *Hub) handleJoinChat(client *Client, message *Message) {
-	// TODO: Load chat history and send to client
 	log.Printf("Client %s joined chat for website %d", client.SessionID, client.WebsiteID)
 	
-	// Send chat history (placeholder)
+	// TODO: Use ChatService to create or get chat and load history
+	// For now, send empty history
 	client.SendMessage("chat_history", map[string]interface{}{
-		"messages": []interface{}{}, // TODO: Load from database
+		"messages": []interface{}{},
+		"chat_id":  nil, // TODO: Get actual chat ID
+	})
+	
+	// Send welcome message
+	client.SendMessage("bot_message", map[string]interface{}{
+		"content":   "Hello! How can I help you today?",
+		"timestamp": time.Now().Unix(),
+		"sender":    "bot",
 	})
 }
 

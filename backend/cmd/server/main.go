@@ -57,6 +57,7 @@ func main() {
 	// Initialize handlers
 	authHandlers := handlers.NewAuthHandlers(cfg)
 	websiteHandlers := handlers.NewWebsiteHandlers(cfg)
+	chatHandlers := handlers.NewChatHandlers(cfg)
 
 	// API routes
 	api := router.Group("/api/v1")
@@ -93,8 +94,15 @@ func main() {
 			protected.POST("/websites/:id/regenerate-key", websiteHandlers.RegenerateWidgetKey)
 
 			// Chat routes
-			protected.GET("/websites/:id/chats", handlers.GetChats)
-			protected.GET("/chats/:id/messages", handlers.GetMessages)
+			protected.GET("/websites/:id/chats", chatHandlers.GetChats)
+			protected.GET("/websites/:id/chats/search", chatHandlers.SearchChats)
+			protected.GET("/websites/:id/chats/active", chatHandlers.GetActiveChats)
+			protected.GET("/websites/:id/chats/stats", chatHandlers.GetChatStats)
+			protected.GET("/websites/:id/chats/analytics", chatHandlers.GetChatAnalytics)
+			protected.GET("/chats/:id", chatHandlers.GetChat)
+			protected.GET("/chats/:id/messages", chatHandlers.GetMessages)
+			protected.POST("/chats/:id/end", chatHandlers.EndChat)
+			protected.POST("/messages/:id/flag", chatHandlers.FlagMessage)
 
 			// Subscription routes
 			protected.GET("/subscription", handlers.GetSubscription)
