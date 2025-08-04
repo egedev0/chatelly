@@ -45,6 +45,7 @@ func Migrate() error {
 		&models.Chat{},
 		&models.Message{},
 		&models.Subscription{},
+		&models.Analytics{},
 	)
 
 	if err != nil {

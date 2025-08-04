@@ -59,6 +59,7 @@ func main() {
 	websiteHandlers := handlers.NewWebsiteHandlers(cfg)
 	chatHandlers := handlers.NewChatHandlers(cfg)
 	widgetHandlers := handlers.NewWidgetHandlers(cfg)
+	analyticsHandlers := handlers.NewAnalyticsHandlers(cfg)
 
 	// API routes
 	api := router.Group("/api/v1")
@@ -115,6 +116,15 @@ func main() {
 			protected.GET("/widget/positions", widgetHandlers.GetAvailablePositions)
 			protected.POST("/widget/validate-settings", widgetHandlers.ValidateWidgetSettings)
 			protected.POST("/widget/preview", widgetHandlers.PreviewWidget)
+
+			// Analytics routes (protected)
+			protected.GET("/analytics/dashboard", analyticsHandlers.GetDashboardMetrics)
+			protected.GET("/analytics/event-types", analyticsHandlers.GetEventTypes)
+			protected.GET("/websites/:id/analytics", analyticsHandlers.GetWebsiteAnalytics)
+			protected.GET("/websites/:id/analytics/events", analyticsHandlers.GetEventsByType)
+			protected.GET("/websites/:id/analytics/visitors/:visitor_id", analyticsHandlers.GetVisitorJourney)
+			protected.GET("/websites/:id/analytics/realtime", analyticsHandlers.GetRealTimeMetrics)
+			protected.GET("/websites/:id/analytics/export", analyticsHandlers.ExportAnalytics)
 		}
 	}
 
@@ -131,6 +141,9 @@ func main() {
 
 		// Widget script
 		widget.GET("/script/:widget_key", widgetHandlers.GetWidgetScript)
+
+		// Event tracking (public)
+		widget.POST("/track/:widget_key", analyticsHandlers.TrackEvent)
 	}
 
 	// Start server
