@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/contexts/auth-context";
 import { ChatProvider } from "@/contexts/chat-context";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
@@ -37,12 +38,14 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          <AuthProvider>
-            <ChatProvider>
-              {children}
-              <Toaster />
-            </ChatProvider>
-          </AuthProvider>
+          <ErrorBoundary>
+            <AuthProvider>
+              <ChatProvider>
+                {children}
+                <Toaster />
+              </ChatProvider>
+            </AuthProvider>
+          </ErrorBoundary>
         </ThemeProvider>
       </body>
     </html>
