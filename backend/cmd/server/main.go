@@ -105,7 +105,7 @@ func main() {
 			protected.PUT("/websites/:id/settings", websiteHandlers.UpdateWebsiteSettings)
 			protected.POST("/websites/:id/toggle-status", websiteHandlers.ToggleWebsiteStatus)
 			protected.GET("/websites/:id/stats", websiteHandlers.GetWebsiteStats)
-			protected.GET("/websites/:id/analytics", websiteHandlers.GetWebsiteAnalytics)
+
 			protected.POST("/websites/:id/regenerate-key", websiteHandlers.RegenerateWidgetKey)
 
 			// Chat routes

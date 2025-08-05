@@ -49,6 +49,7 @@ import {
 } from "@tanstack/react-table"
 import { z } from "zod"
 import Link from "next/link"
+import { Website } from "@/lib/services/website-service"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -97,13 +98,8 @@ import {
   Copy,
 } from "lucide-react"
 
-export const siteSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  domain: z.string(),
-  status: z.string(),
-  users: z.string(),
-})
+// Backend'den gelen Website tipini kullanıyoruz
+type SiteData = Website
 
 // Create a separate component for the drag handle
 function DragHandle({ id }: { id: number }) {
@@ -125,7 +121,7 @@ function DragHandle({ id }: { id: number }) {
   )
 }
 
-const columns: ColumnDef<z.infer<typeof siteSchema>>[] = [
+const columns: ColumnDef<SiteData>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -164,20 +160,20 @@ const columns: ColumnDef<z.infer<typeof siteSchema>>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "users",
-    header: "Kullanıcı Sayısı",
+    accessorKey: "max_users",
+    header: "Max Users",
     cell: ({ row }) => (
       <div className="font-semibold">
-        {row.original.users}
+        {row.original.max_users}
       </div>
     ),
   },
   {
-    accessorKey: "status",
+    accessorKey: "is_active",
     header: "Status",
     cell: ({ row }) => (
-      <Badge variant={row.original.status === "active" ? "default" : "secondary"}>
-        {row.original.status === "active" ? "Aktif" : "Pasif"}
+      <Badge variant={row.original.is_active ? "default" : "secondary"}>
+        {row.original.is_active ? "Aktif" : "Pasif"}
       </Badge>
     ),
   },
@@ -260,7 +256,7 @@ const columns: ColumnDef<z.infer<typeof siteSchema>>[] = [
   },
 ]
 
-function DraggableRow({ row }: { row: Row<z.infer<typeof siteSchema>> }) {
+function DraggableRow({ row }: { row: Row<SiteData> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
     id: row.original.id,
   })
@@ -289,7 +285,7 @@ export function SitesDataTable({
   data: initialData,
   onAddSite,
 }: {
-  data: z.infer<typeof siteSchema>[]
+  data: SiteData[]
   onAddSite?: () => void
 }) {
   const [data, setData] = React.useState(() => initialData)

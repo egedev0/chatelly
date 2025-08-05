@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import AuthGuard from "@/components/auth-guard"
 
 import data from "./data.json"
 
@@ -50,7 +51,7 @@ const sitesData = [
   }
 ]
 
-export default function Page() {
+function DashboardPageContent() {
   const router = useRouter()
   const [isAddSiteModalOpen, setIsAddSiteModalOpen] = useState(false)
   const [newSiteName, setNewSiteName] = useState('')
@@ -143,4 +144,12 @@ export default function Page() {
       </Dialog>
     </>
   )
+}
+
+export default function Page() {
+  return (
+    <AuthGuard>
+      <DashboardPageContent />
+    </AuthGuard>
+  );
 }

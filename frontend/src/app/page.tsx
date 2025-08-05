@@ -4,11 +4,12 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { LandingNav } from '@/components/landing-nav'
+import { useAuth } from '@/contexts/auth-context'
 
 import {
   MessageSquare,
   Zap,
-  Globe,
   Shield,
   BarChart3,
   Smartphone,
@@ -132,41 +133,15 @@ const testimonials = [
 ]
 
 export default function HomePage() {
+  const { isAuthenticated } = useAuth();
+
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
-      <nav className="border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <div className="flex items-center">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
-                  <MessageSquare className="h-5 w-5 text-white" />
-                </div>
-                <span className="ml-2 text-xl font-bold text-gray-900">Chatelly</span>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link href="#features" className="text-gray-600 hover:text-gray-900">
-                Features
-              </Link>
-              <Link href="#pricing" className="text-gray-600 hover:text-gray-900">
-                Pricing
-              </Link>
-              <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">
-                Dashboard
-              </Link>
-              <Button asChild>
-                <Link href="/dashboard">Get Started</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <LandingNav />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <GradientBackground />
+      <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative z-10">
           <div className="text-center">
             <Badge className="mb-4" variant="secondary">
@@ -182,8 +157,8 @@ export default function HomePage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" asChild>
-                <Link href="/dashboard">
-                  Start Free Trial
+                <Link href={isAuthenticated ? "/dashboard" : "/register"}>
+                  {isAuthenticated ? "Go to Dashboard" : "Start Free Trial"}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -287,8 +262,8 @@ export default function HomePage() {
                     variant={plan.popular ? 'default' : 'outline'}
                     asChild
                   >
-                    <Link href="/dashboard">
-                      Start Free Trial
+                    <Link href={isAuthenticated ? "/dashboard" : "/register"}>
+                      {isAuthenticated ? "Go to Dashboard" : "Start Free Trial"}
                     </Link>
                   </Button>
                 </CardContent>
@@ -345,12 +320,12 @@ export default function HomePage() {
             Join thousands of businesses using Chatelly to engage customers and boost conversions.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <LiquidButton size="lg" variant="secondary" asChild>
-              <Link href="/dashboard">
-                Start Free Trial
+            <Button size="lg" variant="secondary" asChild>
+              <Link href={isAuthenticated ? "/dashboard" : "/register"}>
+                {isAuthenticated ? "Go to Dashboard" : "Start Free Trial"}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
-            </LiquidButton>
+            </Button>
             <Button size="lg" variant="outline" className="text-white border-white hover:bg-white hover:text-blue-600">
               Contact Sales
             </Button>

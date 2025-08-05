@@ -6,6 +6,7 @@ import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar"
+import AuthGuard from "@/components/auth-guard"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -206,8 +207,9 @@ export default function SiteDetailPage() {
   }
 
   return (
-    <TooltipProvider>
-      <SidebarProvider
+    <AuthGuard>
+      <TooltipProvider>
+        <SidebarProvider
         style={
           {
             "--sidebar-width": "calc(var(--spacing) * 72)",
@@ -1005,5 +1007,6 @@ export default function SiteDetailPage() {
         </SidebarInset>
       </SidebarProvider>
     </TooltipProvider>
+    </AuthGuard>
   )
 }

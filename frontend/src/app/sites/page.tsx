@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/site-header"
 import {
@@ -10,6 +10,9 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import AuthGuard from "@/components/auth-guard"
+import { websiteService, Website } from "@/lib/services/website-service"
+import { useToast } from "@/hooks/use-toast"
 
 import { SitesDataTable } from "@/components/sites-data-table"
 import {
@@ -47,52 +50,84 @@ import {
     TrendingUp,
     Eye,
     Trash2,
+    Loader2,
 } from 'lucide-react'
 import Link from 'next/link'
 
-// Sites data for SitesDataTable
-const sitesData = [
-    {
-        id: 1,
-        name: "Chatelly Store",
-        domain: "chatelly.com",
-        status: "active",
-        users: "50/100",
-    },
-    {
-        id: 2,
-        name: "Demo Site",
-        domain: "demo.com",
-        status: "active",
-        users: "75/150",
-    },
-    {
-        id: 3,
-        name: "Test Portal",
-        domain: "test.com",
-        status: "inactive",
-        users: "25/50",
-    }
-]
-
-export default function SitesPage() {
-    const [sites] = useState(sitesData)
+function SitesPageContent() {
+    const [sites, setSites] = useState<Website[]>([])
+    const [loading, setLoading] = useState(true)
     const [isAddSiteModalOpen, setIsAddSiteModalOpen] = useState(false)
     const [newSiteName, setNewSiteName] = useState('')
     const [newSiteDomain, setNewSiteDomain] = useState('')
     const [newSiteMaxUsers, setNewSiteMaxUsers] = useState('100')
+    const [isCreating, setIsCreating] = useState(false)
+    const { toast } = useToast()
+
+    // Load websites on component mount
+    useEffect(() => {
+        loadWebsites()
+    }, [])
+
+    const loadWebsites = async () => {
+        try {
+            setLoading(true)
+            const websites = await websiteService.getWebsites()
+            setSites(websites)
+        } catch (error) {
+            console.error('Failed to load websites:', error)
+            toast({
+                title: "Error",
+                description: "Failed to load websites. Please try again.",
+                variant: "destructive",
+            })
+        } finally {
+            setLoading(false)
+        }
+    }
 
     const handleAddSite = () => {
         setIsAddSiteModalOpen(true)
     }
 
-    const handleSaveSite = () => {
-        // Handle save site logic here
-        console.log('Save site:', { name: newSiteName, domain: newSiteDomain, maxUsers: newSiteMaxUsers })
-        setIsAddSiteModalOpen(false)
-        setNewSiteName('')
-        setNewSiteDomain('')
-        setNewSiteMaxUsers('100')
+    const handleSaveSite = async () => {
+        if (!newSiteName.trim() || !newSiteDomain.trim()) {
+            toast({
+                title: "Validation Error",
+                description: "Please fill in all required fields.",
+                variant: "destructive",
+            })
+            return
+        }
+
+        try {
+            setIsCreating(true)
+            const newWebsite = await websiteService.createWebsite({
+                name: newSiteName.trim(),
+                domain: newSiteDomain.trim(),
+                max_users: newSiteMaxUsers === 'unlimited' ? undefined : parseInt(newSiteMaxUsers),
+            })
+            
+            setSites(prev => [...prev, newWebsite])
+            setIsAddSiteModalOpen(false)
+            setNewSiteName('')
+            setNewSiteDomain('')
+            setNewSiteMaxUsers('100')
+            
+            toast({
+                title: "Success",
+                description: "Website created successfully!",
+            })
+        } catch (error) {
+            console.error('Failed to create website:', error)
+            toast({
+                title: "Error",
+                description: "Failed to create website. Please try again.",
+                variant: "destructive",
+            })
+        } finally {
+            setIsCreating(false)
+        }
     }
 
     return (
@@ -188,11 +223,18 @@ export default function SitesPage() {
 
                                 {/* Sites DataTable */}
                                 <div>
-                                    <SitesDataTable data={sites} onAddSite={handleAddSite} />
+                                    {loading ? (
+                                        <div className="flex items-center justify-center py-12">
+                                            <Loader2 className="h-8 w-8 animate-spin" />
+                                            <span className="ml-2">Loading websites...</span>
+                                        </div>
+                                    ) : (
+                                        <SitesDataTable data={sites} onAddSite={handleAddSite} />
+                                    )}
                                 </div>
 
                                 {/* Empty State (if no sites) */}
-                                {sites.length === 0 && (
+                                {!loading && sites.length === 0 && (
                                     <div className="flex flex-col items-center justify-center py-12 px-4">
                                         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                                             <Globe className="h-8 w-8 text-gray-400" />
@@ -269,15 +311,30 @@ export default function SitesPage() {
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsAddSiteModalOpen(false)}>
+                        <Button variant="outline" onClick={() => setIsAddSiteModalOpen(false)} disabled={isCreating}>
                             Cancel
                         </Button>
-                        <Button onClick={handleSaveSite}>
-                            Add Site
+                        <Button onClick={handleSaveSite} disabled={isCreating}>
+                            {isCreating ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Creating...
+                                </>
+                            ) : (
+                                'Add Site'
+                            )}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
         </TooltipProvider>
     )
+}
+
+export default function SitesPage() {
+    return (
+        <AuthGuard>
+            <SitesPageContent />
+        </AuthGuard>
+    );
 }
